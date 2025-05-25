@@ -1,4 +1,5 @@
 # Messaging API Backend Assignment
+```
 messaging-api-backend-assignment/
 │
 ├── app/                     # Main application code
@@ -21,3 +22,4 @@ messaging-api-backend-assignment/
 ├── .env.example             # Sample environment variables
 ├── .gitignore
 └── README.md                # Setup and usage instructions
+```
