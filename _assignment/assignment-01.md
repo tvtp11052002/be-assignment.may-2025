@@ -6,7 +6,7 @@ Implement a backend messaging system API with the following goals:
 
 - Build APIs based on the provided data model.
 - Use **FastAPI** for API development.
-- Use **PostgreSQL** for data management.
+- Use **PostgreSQL/SQLite** for data management.
 - Use **Justfile** for all run and development commands.
 - (Optional – Advanced) Use **Docker** to containerize the application.
 - (Optional – Advanced) Convert the API to an **MCP server** and connect to **Claude Desktop** for testing.
@@ -15,7 +15,7 @@ Implement a backend messaging system API with the following goals:
 
 - Python 3.11+
 - FastAPI
-- PostgreSQL
+- PostgreSQL/SQLite
 - SQLAlchemy or Tortoise ORM
 - Justfile
 - GitHub Actions for CI/CD
@@ -100,7 +100,7 @@ All scripts for development and testing must be included in a `Justfile`. The fo
 | Criteria                 | Required | Bonus |
 |--------------------------|----------|-------|
 | API functionality        | ✅       |       |
-| PostgreSQL integration   | ✅       |       |
+| SQL Database integration | ✅       |       |
 | Command automation       | ✅       |       |
 | Test coverage            | ✅       |       |
 | CI/CD via GitHub Actions | ✅       |       |
