@@ -17,9 +17,9 @@ Implement a backend messaging system API with the following goals:
 - FastAPI
 - PostgreSQL
 - SQLAlchemy or Tortoise ORM
-- Docker & Docker Compose
 - Justfile
 - GitHub Actions for CI/CD
+- (Optional) Docker & Docker Compose
 - (Optional) MCP integration for AI agent testing
 
 ## 🧩 Data Model
@@ -79,7 +79,6 @@ All scripts for development and testing must be included in a `Justfile`. The fo
 ## 🚀 Project Requirements
 
 - Source code must be hosted in a **public GitHub repository**.
-- The application must be runnable via `docker-compose`.
 - Automated tests must be defined and executed via `just test`.
 - Tests must run successfully via **GitHub Actions**.
 - A `README.md` must describe:
@@ -87,6 +86,7 @@ All scripts for development and testing must be included in a `Justfile`. The fo
   - Justfile command list
   - How to use and test the APIs
   - (Optional) MCP instructions for Claude Desktop
+  - (Optional) The application run via `docker-compose`.
 
 ## 🌟 Advanced (Optional)
 
