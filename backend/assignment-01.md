@@ -7,8 +7,8 @@ Implement a backend messaging system API with the following goals:
 - Build APIs based on the provided data model.
 - Use **FastAPI** for API development.
 - Use **PostgreSQL** for data management.
-- Use **Docker** to containerize the application.
 - Use **Justfile** for all run and development commands.
+- (Optional – Advanced) Use **Docker** to containerize the application.
 - (Optional – Advanced) Convert the API to an **MCP server** and connect to **Claude Desktop** for testing.
 
 ## 📦 Tech Requirements
@@ -101,9 +101,9 @@ All scripts for development and testing must be included in a `Justfile`. The fo
 |--------------------------|----------|-------|
 | API functionality        | ✅       |       |
 | PostgreSQL integration   | ✅       |       |
-| Docker containerization  | ✅       |       |
 | Command automation       | ✅       |       |
 | Test coverage            | ✅       |       |
 | CI/CD via GitHub Actions | ✅       |       |
+| Docker containerization  |          | ⭐     |
 | MCP server integration   |          | ⭐     |
 | Claude Desktop testing   |          | ⭐     |
