@@ -106,14 +106,14 @@ You must include test cases that cover:
 ### D4. Package API with Docker (Optional)
 You must include the following in your project:
 
-- `[]` Dockerfile
+- `[ ]` Dockerfile
 	```
 	- Containerizes the FastAPI application.
 	- Must expose port 8000.
 	- Uses a production-ready base image (e.g. python:3.11-slim).
 	- Installs dependencies from requirements.txt.
 	```
-- `[]` docker-compose.yml
+- `[ ]` docker-compose.yml
 	```
 	- Starts at least:
 		- Your FastAPI app container
