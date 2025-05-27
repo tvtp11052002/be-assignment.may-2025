@@ -43,8 +43,7 @@ The following tables must be implemented:
 - `read`: Boolean
 - `read_at`: DateTime (nullable)
 
-## C. Project Requirements
-### Tech Stack
+## C. Tech Requirements
 - Python 3.11+
 - FastAPI
 - PostgreSQL/SQLite
