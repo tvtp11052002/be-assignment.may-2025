@@ -1,4 +1,5 @@
 # Justfile for Messaging API Backend Assignment
+set shell := ["powershell", "-Command"]
 
 # Install Python dependencies
 install:
@@ -18,11 +19,11 @@ down:
 
 # Run database migrations (if using Alembic)
 migrate:
-	alembic upgrade head
+	python app/main.py
 
 # Run tests
 test:
-	pytest
+	pytest --disable-warnings -v
 
 # Format code using black and isort
 format:
