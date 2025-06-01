@@ -1,0 +1,47 @@
+name: CI - BE Assign
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: tuan_phong
+          POSTGRES_PASSWORD: Phong2525132546879!
+          POSTGRES_DB: be_assign
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install just
+      run: |
+        sudo apt update
+        sudo apt install -y just
+
+    - name: Set environment variables
+      run: echo "DATABASE_URL=postgresql+psycopg2://tuan_phong:Phong2525132546879!@localhost:5432/be_assign" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: just install
+
+    - name: Run tests
+      run: just test
