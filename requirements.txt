@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+pydantic[email]
 sqlalchemy
 asyncpg
 alembic
@@ -10,3 +11,4 @@ httpx
 pytest-asyncio
 black
 isort
+psycopg2
