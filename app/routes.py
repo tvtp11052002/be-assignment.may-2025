@@ -52,3 +52,65 @@ def delete_all_users(db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "All users deleted"}
 
+@router.post("/messages/", response_model=schemas.MessageResponse, status_code=status.HTTP_201_CREATED)
+def send_message(data: schemas.MessageCreate, db: Session = Depends(get_db)):
+    sender = db.query(User).filter(User.id == data.sender_id).first()
+    if not sender:
+        raise HTTPException(status_code=404, detail="Sender not found")
+
+    msg = Message(sender_id=data.sender_id, subject=data.subject, content=data.content)
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+
+    for rid in data.recipient_ids:
+        recipient = db.query(User).filter(User.id == rid).first()
+        if not recipient:
+            raise HTTPException(status_code=404, detail=f"Recipient {rid} not found")
+        mr = MessageRecipient(message_id=msg.id, recipient_id=rid, read=False)
+        db.add(mr)
+
+    db.commit()
+    return msg
+
+
+@router.get("/messages/sent/{user_id}", response_model=List[schemas.MessageResponse])
+def get_sent_messages(user_id: UUID, db: Session = Depends(get_db)):
+    return db.query(Message).filter(Message.sender_id == user_id).all()
+
+
+@router.get("/messages/inbox/{user_id}", response_model=List[schemas.MessageResponse])
+def get_inbox(user_id: UUID, db: Session = Depends(get_db)):
+    messages = db.query(Message).join(MessageRecipient).filter(MessageRecipient.recipient_id == user_id).all()
+    return messages
+
+
+@router.get("/messages/unread/{user_id}", response_model=List[schemas.MessageResponse])
+def get_unread_messages(user_id: UUID, db: Session = Depends(get_db)):
+    messages = db.query(Message).join(MessageRecipient).filter(
+        MessageRecipient.recipient_id == user_id,
+        MessageRecipient.read == False
+    ).all()
+    return messages
+
+
+@router.get("/messages/{message_id}", response_model=schemas.MessageDetailResponse)
+def get_message_with_recipients(message_id: UUID, db: Session = Depends(get_db)):
+    msg = db.query(Message).options(joinedload(Message.recipients)).filter(Message.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return msg
+
+
+@router.post("/messages/{message_id}/read/{recipient_id}")
+def mark_as_read(message_id: UUID, recipient_id: UUID, db: Session = Depends(get_db)):
+    mr = db.query(MessageRecipient).filter(
+        MessageRecipient.message_id == message_id,
+        MessageRecipient.recipient_id == recipient_id
+    ).first()
+    if not mr:
+        raise HTTPException(status_code=404, detail="Recipient not found for this message")
+    mr.read = True
+    mr.read_at = datetime.utcnow()
+    db.commit()
+    return {"status": "marked as read"}
