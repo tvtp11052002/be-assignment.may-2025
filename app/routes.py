@@ -1,18 +1,22 @@
 # FastAPI routes
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import status, APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload
+from datetime import datetime
 from typing import List
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session, joinedload
+
 from app import models, schemas
 from app.db import SessionLocal
-from app.models import User, Message, MessageRecipient
-from datetime import datetime
+from app.models import Message, MessageRecipient, User
 
 router = APIRouter()
+
 
 # Dependency to get DB session
 def get_db():
@@ -23,9 +27,11 @@ def get_db():
         db.close()
 
 
-@router.post("/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED
+)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    
+
     db_user = models.User(email=user.email, name=user.name)
     db.add(db_user)
     db.commit()
@@ -52,7 +58,12 @@ def delete_all_users(db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "All users deleted"}
 
-@router.post("/messages/", response_model=schemas.MessageResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/messages/",
+    response_model=schemas.MessageResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def send_message(data: schemas.MessageCreate, db: Session = Depends(get_db)):
     sender = db.query(User).filter(User.id == data.sender_id).first()
     if not sender:
@@ -81,22 +92,36 @@ def get_sent_messages(user_id: UUID, db: Session = Depends(get_db)):
 
 @router.get("/messages/inbox/{user_id}", response_model=List[schemas.MessageResponse])
 def get_inbox(user_id: UUID, db: Session = Depends(get_db)):
-    messages = db.query(Message).join(MessageRecipient).filter(MessageRecipient.recipient_id == user_id).all()
+    messages = (
+        db.query(Message)
+        .join(MessageRecipient)
+        .filter(MessageRecipient.recipient_id == user_id)
+        .all()
+    )
     return messages
 
 
 @router.get("/messages/unread/{user_id}", response_model=List[schemas.MessageResponse])
 def get_unread_messages(user_id: UUID, db: Session = Depends(get_db)):
-    messages = db.query(Message).join(MessageRecipient).filter(
-        MessageRecipient.recipient_id == user_id,
-        MessageRecipient.read == False
-    ).all()
+    messages = (
+        db.query(Message)
+        .join(MessageRecipient)
+        .filter(
+            MessageRecipient.recipient_id == user_id, MessageRecipient.read == False
+        )
+        .all()
+    )
     return messages
 
 
 @router.get("/messages/{message_id}", response_model=schemas.MessageDetailResponse)
 def get_message_with_recipients(message_id: UUID, db: Session = Depends(get_db)):
-    msg = db.query(Message).options(joinedload(Message.recipients)).filter(Message.id == message_id).first()
+    msg = (
+        db.query(Message)
+        .options(joinedload(Message.recipients))
+        .filter(Message.id == message_id)
+        .first()
+    )
     if not msg:
         raise HTTPException(status_code=404, detail="Message not found")
     return msg
@@ -104,12 +129,18 @@ def get_message_with_recipients(message_id: UUID, db: Session = Depends(get_db))
 
 @router.post("/messages/{message_id}/read/{recipient_id}")
 def mark_as_read(message_id: UUID, recipient_id: UUID, db: Session = Depends(get_db)):
-    mr = db.query(MessageRecipient).filter(
-        MessageRecipient.message_id == message_id,
-        MessageRecipient.recipient_id == recipient_id
-    ).first()
+    mr = (
+        db.query(MessageRecipient)
+        .filter(
+            MessageRecipient.message_id == message_id,
+            MessageRecipient.recipient_id == recipient_id,
+        )
+        .first()
+    )
     if not mr:
-        raise HTTPException(status_code=404, detail="Recipient not found for this message")
+        raise HTTPException(
+            status_code=404, detail="Recipient not found for this message"
+        )
     mr.read = True
     mr.read_at = datetime.utcnow()
     db.commit()

@@ -1,13 +1,16 @@
 # Pydantic models
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime
+
+from pydantic import BaseModel, EmailStr
+
 
 # User schemas
 class UserCreate(BaseModel):
     email: EmailStr
     name: str
+
 
 class UserResponse(BaseModel):
     id: UUID
@@ -25,6 +28,7 @@ class MessageCreate(BaseModel):
     subject: Optional[str]
     content: str
     recipient_ids: List[UUID]
+
 
 class MessageResponse(BaseModel):
     id: UUID
@@ -47,6 +51,7 @@ class MessageRecipientResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
 class MessageDetailResponse(BaseModel):
     id: UUID
     sender_id: UUID
@@ -57,4 +62,3 @@ class MessageDetailResponse(BaseModel):
 
     class Config:
         orm_mode = True
-

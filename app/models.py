@@ -1,14 +1,18 @@
 # SQLAlchemy or Tortoise models
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uuid
-from sqlalchemy import Column, String, DateTime, Text, Boolean, ForeignKey
+from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from datetime import datetime
+
 from app.db import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -39,7 +43,7 @@ class MessageRecipient(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
     recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    
+
     read = Column(Boolean, default=False)
     read_at = Column(DateTime, nullable=True)
 
