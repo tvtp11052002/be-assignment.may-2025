@@ -28,7 +28,7 @@ class User(Base):
 class Message(Base):
     __tablename__ = "messages"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sender_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    sender_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     subject = Column(String)
     content = Column(Text, nullable=False)
     timestamp = Column(DateTime, default=datetime.now())
@@ -41,8 +41,8 @@ class MessageRecipient(Base):
     __tablename__ = "message_recipients"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
-    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"))
+    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
 
     read = Column(Boolean, default=False)
     read_at = Column(DateTime, nullable=True)
