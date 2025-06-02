@@ -61,30 +61,30 @@ The following tables must be implemented:
 The system must support the following API functionality:
 
 #### User APIs
-- `[ ]` Create a user
-- `[ ]` Retrieve user info
-- `[ ]` List users
+- `[x]` Create a user
+- `[x]` Retrieve user info
+- `[x]` List users
 
 #### Message APIs
-- `[ ]` Send a message to one or more recipients
-- `[ ]` View sent messages
-- `[ ]` View inbox messages
-- `[ ]` View unread messages
-- `[ ]` View a message with all recipients
-- `[ ]` Mark a message as read
+- `[x]` Send a message to one or more recipients
+- `[x]` View sent messages
+- `[x]` View inbox messages
+- `[x]` View unread messages
+- `[x]` View a message with all recipients
+- `[x]` Mark a message as read
 
 ### D2. Command Line (Justfile)
 
 All scripts for development and testing must be included in a `Justfile`. The following commands are required:
 
-- `[ ]` `just install`
-- `[ ]` `just dev`
-- `[ ]` `just migrate`
-- `[ ]` `just test`
-- `[ ]` `just down` (optional)
-- `[ ]` `just up` (optional)
-- `[ ]` `just mcp` (optional)
-- `[ ]` `just format` (optional)
+- `[x]` `just install`
+- `[x]` `just dev`
+- `[x]` `just migrate`
+- `[x]` `just test`
+- `[x]` `just down` (optional)
+- `[x]` `just up` (optional)
+- `[x]` `just mcp` (optional)
+- `[x]` `just format` (optional)
 
 ### D3. CI/CD With Github Action
 Your repository will be automatically tested using GitHub Actions. To pass this phase, please ensure the following:
@@ -93,27 +93,27 @@ Include automated tests in the `/tests` folder using pytest.
 
 Your pipeline must include:
 
-- `[ ]` Sets up Python 3.11
-- `[ ]` Installs dependencies using just install
-- `[ ]` Runs tests using just test
+- `[x]` Sets up Python 3.11
+- `[x]` Installs dependencies using just install
+- `[x]` Runs tests using just test
 
 You must include test cases that cover:
 
-- `[ ]` User Management: Create user, get user by ID, list users
-- `[ ]` Messaging : Send message, get inbox, get sent
-- `[ ]` Read Status : Mark message as read, get unread messages
+- `[x]` User Management: Create user, get user by ID, list users
+- `[x]` Messaging : Send message, get inbox, get sent
+- `[x]` Read Status : Mark message as read, get unread messages
 
 ### D4. Package API with Docker (Optional)
 You must include the following in your project:
 
-- `[ ]` Dockerfile
+- `[x]` Dockerfile
 	```
 	- Containerizes the FastAPI application.
 	- Must expose port 8000.
 	- Uses a production-ready base image (e.g. python:3.11-slim).
 	- Installs dependencies from requirements.txt.
 	```
-- `[ ]` docker-compose.yml
+- `[x]` docker-compose.yml
 	```
 	- Starts at least:
 		- Your FastAPI app container
@@ -123,7 +123,7 @@ You must include the following in your project:
 		- Expose port 5432
 	- Be accessible to the app via internal hostname (e.g., db)
 	```
-- `[ ]` .env.example
+- `[x]` .env.example
 	```
 	- Provide an example .env file containing:
 		- DATABASE_URL
@@ -132,7 +132,7 @@ You must include the following in your project:
 
 ### D5. Advanced: MCP-compatible server (Optional)
 
-- `[ ]` Convert the application to an MCP-compatible server.
-- `[ ]` Define a set of MCP tool functions that can interact with the messaging system.
+- `[x]` Convert the application to an MCP-compatible server.
+- `[x]` Define a set of MCP tool functions that can interact with the messaging system.
 - `[ ]` Provide a `.mcp.json` manifest for Claude Desktop to consume.
 - `[ ]` Demonstrate successful interaction between Claude and your MCP server.
