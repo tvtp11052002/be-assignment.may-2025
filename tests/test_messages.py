@@ -12,6 +12,7 @@ from app.main import app
 client = TestClient(app)
 
 
+#### Messaging
 @pytest.fixture(scope="module")
 def test_data():
     sender = client.post(
@@ -40,44 +41,49 @@ def test_data():
         "message": message,
     }
 
-
+# Send message
 def test_send_message(test_data):
-    assert "id" in test_data["message"]
+    message = test_data["message"]
+    assert "id" in message
 
 
+# Get sent
 def test_get_sent_messages(test_data):
     sender_id = test_data["sender"]["id"]
 
-    response = client.get(f"/messages/sent/{sender_id}")
+    response = client.get(f"/messages/sent?user_id={sender_id}")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 
+# Get inbox
 def test_get_inbox(test_data):
     recipient_id = test_data["recipients"][0]["id"]
 
-    inbox_list = client.get(f"/messages/inbox/{recipient_id}")
+    inbox_list = client.get(f"/messages/inbox?user_id={recipient_id}")
     assert inbox_list.status_code == 200
     assert isinstance(inbox_list.json(), list)
 
 
+# Get unread messages
 def test_get_unread_messages(test_data):
     r_id = test_data["recipients"][0]["id"]
-    unread = client.get(f"/messages/unread/{r_id}")
+    unread = client.get(f"/messages/unread?user_id={r_id}")
     assert unread.status_code == 200
     assert isinstance(unread.json(), list)
 
 
+# Get message with recipients (optional) 
 def test_get_message_with_recipients(test_data):
     msg_id = test_data["message"]["id"]
     response = client.get(f"/messages/{msg_id}")
     assert response.status_code == 200
     assert "recipients" in response.json()
 
-
+# Mark message as read
 def test_mark_as_read(test_data):
     msg_id = test_data["message"]["id"]
     r_id = test_data["recipients"][0]["id"]
-    response = client.post(f"/messages/{msg_id}/read/{r_id}")
+    response = client.post(f"/messages/{msg_id}/read?recipient_id={r_id}")
     assert response.status_code == 200
     assert response.json()["status"] == "marked as read"
