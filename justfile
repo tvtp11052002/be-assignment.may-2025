@@ -1,5 +1,4 @@
 # Justfile for Messaging API Backend Assignment
-set shell := ["powershell", "-Command"]
 
 # Install Python dependencies
 install:
