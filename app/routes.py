@@ -27,6 +27,8 @@ def get_db():
         db.close()
 
 
+#### Users APIs ####
+# Create a user
 @router.post(
     "/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED
 )
@@ -38,12 +40,13 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-
+# List users
 @router.get("/users/", response_model=list[schemas.UserResponse])
 def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
 
 
+# Retrieve user info
 @router.get("/users/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: UUID, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -52,6 +55,7 @@ def get_user(user_id: UUID, db: Session = Depends(get_db)):
     return user
 
 
+# Optional: Delete all users
 @router.delete("/users/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_all_users(db: Session = Depends(get_db)):
     db.query(models.User).delete()
@@ -59,6 +63,8 @@ def delete_all_users(db: Session = Depends(get_db)):
     return {"detail": "All users deleted"}
 
 
+#### Messages APIs ####
+# Send a message to one or more recipients
 @router.post(
     "/messages/",
     response_model=schemas.MessageResponse,
@@ -71,8 +77,7 @@ def send_message(data: schemas.MessageCreate, db: Session = Depends(get_db)):
 
     msg = Message(sender_id=data.sender_id, subject=data.subject, content=data.content)
     db.add(msg)
-    db.commit()
-    db.refresh(msg)
+    db.flush()
 
     for rid in data.recipient_ids:
         recipient = db.query(User).filter(User.id == rid).first()
@@ -82,15 +87,20 @@ def send_message(data: schemas.MessageCreate, db: Session = Depends(get_db)):
         db.add(mr)
 
     db.commit()
+    db.refresh(msg)
     return msg
 
-
-@router.get("/messages/sent/{user_id}", response_model=List[schemas.MessageResponse])
+# View sent messages
+@router.get("/messages/sent", response_model=List[schemas.MessageResponse])
 def get_sent_messages(user_id: UUID, db: Session = Depends(get_db)):
-    return db.query(Message).filter(Message.sender_id == user_id).all()
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    messages = db.query(Message).filter(Message.sender_id == user_id).all()
+    return messages
 
-
-@router.get("/messages/inbox/{user_id}", response_model=List[schemas.MessageResponse])
+# View inbox messages
+@router.get("/messages/inbox", response_model=List[schemas.MessageResponse])
 def get_inbox(user_id: UUID, db: Session = Depends(get_db)):
     messages = (
         db.query(Message)
@@ -100,8 +110,8 @@ def get_inbox(user_id: UUID, db: Session = Depends(get_db)):
     )
     return messages
 
-
-@router.get("/messages/unread/{user_id}", response_model=List[schemas.MessageResponse])
+# View unread messages
+@router.get("/messages/unread", response_model=List[schemas.MessageResponse])
 def get_unread_messages(user_id: UUID, db: Session = Depends(get_db)):
     messages = (
         db.query(Message)
@@ -113,7 +123,7 @@ def get_unread_messages(user_id: UUID, db: Session = Depends(get_db)):
     )
     return messages
 
-
+# View a message with all recipients
 @router.get("/messages/{message_id}", response_model=schemas.MessageDetailResponse)
 def get_message_with_recipients(message_id: UUID, db: Session = Depends(get_db)):
     msg = (
@@ -127,7 +137,8 @@ def get_message_with_recipients(message_id: UUID, db: Session = Depends(get_db))
     return msg
 
 
-@router.post("/messages/{message_id}/read/{recipient_id}")
+# Mark a message as read (for a specific recipient)
+@router.post("/messages/{message_id}/read")
 def mark_as_read(message_id: UUID, recipient_id: UUID, db: Session = Depends(get_db)):
     mr = (
         db.query(MessageRecipient)
