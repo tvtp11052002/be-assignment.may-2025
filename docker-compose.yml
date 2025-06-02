@@ -1,4 +1,5 @@
 # Docker Compose to run app + PostgreSQL 
+# .env.example: DATABASE_URL = "postgresql://tuan_phong:Phong2525132546879!@localhost:5432/be_assign"
 version: '3.8'
 
 services:
