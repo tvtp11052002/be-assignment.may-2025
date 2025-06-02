@@ -1,4 +1,4 @@
-# Docker Compose to run app + PostgreSQL
+# Docker Compose to run app + PostgreSQL 
 version: '3.8'
 
 services:

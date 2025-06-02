@@ -1,5 +1,5 @@
 # Dockerfile for FastAPI app
-# Use a production-ready Python base image
+# Use a production-ready Python base image 
 FROM python:3.11-slim
 
 # Set working directory
