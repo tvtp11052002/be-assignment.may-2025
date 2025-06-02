@@ -33,3 +33,5 @@ format:
 # Run the MCP server (optional)
 mcp:
 	uvicorn app.mcp_server:app --reload
+
+# Check list 
