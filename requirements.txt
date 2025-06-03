@@ -12,3 +12,4 @@ pytest-asyncio
 black
 isort
 psycopg2-binary
+fastmcp
