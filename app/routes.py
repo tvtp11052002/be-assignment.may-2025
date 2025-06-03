@@ -12,19 +12,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
-from app.db import SessionLocal
+from app.db import get_db
 from app.models import Message, MessageRecipient, User
 
 router = APIRouter()
-
-
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 #### Users APIs ####
