@@ -225,7 +225,7 @@ def get_message_with_recipients(message_id: str):
         db.close()
 
 @mcp.tool()
-def mark_message_as_read(message_id: str, recipient_id: str) -> Dict[str, str]:
+def mark_message_as_read(message_id: str, recipient_id: str):
     """ Mark a message as read"""
     try:
         message_uuid = UUID(message_id)
@@ -257,37 +257,37 @@ def mark_message_as_read(message_id: str, recipient_id: str) -> Dict[str, str]:
 #### RESOURCE HANDLERS ####
 
 @mcp.resource("messaging://users")
-def get_all_users_resource() -> str:
+def get_all_users_resource():
     """Resource handler for all users"""
     users = list_users()
     return json.dumps(users, indent=2)
 
 @mcp.resource("messaging://users/{user_id}")
-def get_user_resource(user_id: str) -> str:
+def get_user_resource(user_id: str):
     """Resource handler for specific user"""
     user = get_user(user_id)
     return json.dumps(user, indent=2)
 
 @mcp.resource("messaging://messages/inbox/{user_id}")
-def get_inbox_resource(user_id: str) -> str:
+def get_inbox_resource(user_id: str):
     """Resource handler for user's inbox"""
     messages = get_inbox(user_id)
     return json.dumps(messages, indent=2)
 
 @mcp.resource("messaging://messages/sent/{user_id}")
-def get_sent_messages_resource(user_id: str) -> str:
+def get_sent_messages_resource(user_id: str):
     """Resource handler for user's sent messages"""
     messages = get_sent_messages(user_id)
     return json.dumps(messages, indent=2)
 
 @mcp.resource("messaging://messages/unread/{user_id}")
-def get_unread_messages_resource(user_id: str) -> str:
+def get_unread_messages_resource(user_id: str):
     """Resource handler for user's unread messages"""
     messages = get_unread_messages(user_id)
     return json.dumps(messages, indent=2)
 
 @mcp.resource("messaging://messages/{message_id}")
-def get_message_resource(message_id: str) -> str:
+def get_message_resource(message_id: str):
     """Resource handler for specific message with recipients"""
     message = get_message_with_recipients(message_id)
     return json.dumps(message, indent=2)
