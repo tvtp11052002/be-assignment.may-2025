@@ -1,1 +1,10 @@
-# MCP manifest (optional)
+{
+  "mcpServers": {
+    "mcp_server": {
+      "command": "C:/Workspace/be-assignment.may-2025/venv/Scripts/python.exe",
+      "args": [
+        "C:/Workspace/be-assignment.may-2025/app/mcp_server.py"
+      ]
+    }
+  }
+}
