@@ -136,3 +136,24 @@ You must include the following in your project:
 - `[x]` Define a set of MCP tool functions that can interact with the messaging system.
 - `[x]` Provide a `.mcp.json` manifest for Claude Desktop to consume.
 - `[x]` Demonstrate successful interaction between Claude and your MCP server.
+	- Create users
+		- Create new user with email "alice@example.com" and name "Alice Nguyen"
+		- Create one more user with email "bob@example.com" and name "Bob Bob"
+	- List users
+		- Give me information of user Bob
+		- Show all users in system
+	- Message System
+		- Send message from Alice to Bob with subject "Meeting tomorrow" and content "Hi Bob, let's meet at 2pm tomorrow"
+		- Show all messages that send to Bob
+		- Show all messages that send from Alice
+		- Show all unread messages of Bob
+		- Mark unread messages as read for Bob
+	- Test complex scenarios
+		- Create 3 users: John (john@test.com), Mary (mary@test.com), and David (david@test.com). John send the message: "Team Meeting" with content "Weekly team sync at 3PM" to Mary and David. Finally show inbox of Mary.
+	- Test complete workflow:
+		1. Create user manager with email "manager@company.com" 
+		2. Create user employee with email "employee@company.com"
+		3. Manager send message "Task Assignment" to employee
+		4. Show unread messages of employee
+		5. Mark this unread message as read
+		6. Show all unread messages to confirm
