@@ -134,5 +134,5 @@ You must include the following in your project:
 
 - `[x]` Convert the application to an MCP-compatible server.
 - `[x]` Define a set of MCP tool functions that can interact with the messaging system.
-- `[ ]` Provide a `.mcp.json` manifest for Claude Desktop to consume.
-- `[ ]` Demonstrate successful interaction between Claude and your MCP server.
+- `[x]` Provide a `.mcp.json` manifest for Claude Desktop to consume.
+- `[x]` Demonstrate successful interaction between Claude and your MCP server.
