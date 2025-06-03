@@ -35,7 +35,7 @@ def serialize_message(message: Message) -> Dict:
         "sender_id": str(message.sender_id),
         "subject": message.subject,
         "content": message.content,
-        "timestamp": message.timestampNone,
+        "timestamp": message.timestamp,
     }
 
 def serialize_message_with_recipients(message: MessageRecipient) -> Dict:
