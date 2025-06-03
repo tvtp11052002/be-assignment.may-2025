@@ -3,150 +3,295 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional
+import json
 from datetime import datetime
-from sqlalchemy.orm import Session
+from typing import List, Dict, Any
+from uuid import UUID
+import uuid
 
-from app.db import SessionLocal
-from app.routes import get_db
-from app import models
+from fastmcp import FastMCP
+from sqlalchemy.orm import joinedload
+from app import models, schemas
+from app.db import get_db, get_db_session
+from app.models import Message, MessageRecipient, User
 
-app = FastAPI(title="Messaging MCP Server")
+# Initialize MCP server
+mcp = FastMCP("Messaging System")
 
 
-# --- MCP Models ---
-class MCPRequest(BaseModel):
-    input: Optional[str] = None  # text prompt
-    params: Optional[dict] = None  
-    context: Optional[dict] = None  
+def serialize_user(user: User) -> Dict:
+    """Serialize User object to dictionary"""
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "name": user.name,
+        "created_at": user.created_at
+    }
 
-class MCPResponse(BaseModel):
-    output: Optional[str] = None
-    data: Optional[dict] = None  
-    context: Optional[dict] = None
+def serialize_message(message: Message) -> Dict:
+    """Serialize Message object to dictionary"""
+    return {
+        "id": str(message.id),
+        "sender_id": str(message.sender_id),
+        "subject": message.subject,
+        "content": message.content,
+        "timestamp": message.timestampNone,
+    }
 
-# MCP: Create a user
-@app.post("/mcp/create_user", response_model=MCPResponse)
-def create_user_tool(req: MCPRequest, db: Session = Depends(get_db)):
-    params = req.params or {}
-    email = params.get("email")
-    name = params.get("name")
-    if not email or not name:
-        raise HTTPException(status_code=400, detail="Missing 'email' or 'name'")
-    # Check duplicate email
-    if db.query(models.User).filter(models.User.email == email).first():
-        return MCPResponse(output=f"Email {email} already exists.", context=req.context)
-    user = models.User(email=email, name=name)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return MCPResponse(
-        output=f"User {name} created with ID {user.id}",
-        data={"user_id": str(user.id), "email": user.email, "name": user.name},
-        context=req.context,
-    )
+def serialize_message_with_recipients(message: MessageRecipient) -> Dict:
+    """Serialize Message recipients to dictionary"""
+    result = serialize_message(message)
+    result["recipients"] = [
+        {
+            "recipient_id": str(mr.recipient_id),
+            "read": mr.read,
+            "read_at": mr.read_at
+        }
+        for mr in message.recipients
+    ]
+    return result
 
-# MCP: List users
-@app.post("/mcp/list_users", response_model=MCPResponse)
-def list_users_tool(req: MCPRequest, db: Session = Depends(get_db)):
-    users = db.query(models.User).all()
-    users_list = [{"id": str(u.id), "email": u.email, "name": u.name} for u in users]
-    return MCPResponse(
-        output=f"Found {len(users_list)} users.",
-        data={"users": users_list},
-        context=req.context,
-    )
+#### USER TOOLS ####
 
-# MCP: Send message
-@app.post("/mcp/send_message", response_model=MCPResponse)
-def send_message_tool(req: MCPRequest, db: Session = Depends(get_db)):
-    params = req.params or {}
-    sender_id = params.get("sender_id")
-    subject = params.get("subject")
-    content = params.get("content")
-    recipient_ids = params.get("recipient_ids", [])
-    if not sender_id or not content or not recipient_ids:
-        raise HTTPException(
-            status_code=400,
-            detail="Missing required fields: 'sender_id', 'content', 'recipient_ids'",
+@mcp.tool()
+def create_user(email: str, name: str):
+    """Create a new user"""
+    db = get_db_session()
+    try:
+        db_user = models.User(email=email, name=name)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return serialize_user(db_user)
+    finally:
+        db.close()
+
+@mcp.tool()
+def list_users():
+    """List all users"""
+    db = get_db_session()
+    try:
+        users = db.query(models.User).all()
+        return [serialize_user(user) for user in users]
+    finally:
+        db.close()
+
+@mcp.tool()
+def get_user(user_id: str):
+    """Retrieve user information"""
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise ValueError("Invalid user ID format")
+    
+    db = get_db_session()
+    try:
+        user = db.query(models.User).filter(models.User.id == user_uuid).first()
+        if not user:
+            raise ValueError("User not found")
+        return serialize_user(user)
+    finally:
+        db.close()
+
+@mcp.tool()
+def delete_all_users():
+    """Delete all users"""
+    db = get_db_session()
+    try:
+        db.query(models.User).delete()
+        db.commit()
+        return {"detail": "All users deleted"}
+    finally:
+        db.close()
+
+#### MESSAGE TOOLS ####
+
+@mcp.tool()
+def send_message(sender_id: str, recipient_ids: List[str], subject: str, content: str):
+    """Send a message"""
+    try:
+        sender_uuid = UUID(sender_id)
+        recipient_uuids = [UUID(rid) for rid in recipient_ids]
+    except ValueError:
+        raise ValueError("Invalid UUID format in sender_id or recipient_ids")
+    
+    db = get_db_session()
+    try:
+        sender = db.query(User).filter(User.id == sender_uuid).first()
+        if not sender:
+            raise ValueError("Sender not found")
+        
+        msg = Message(sender_id=sender_uuid, subject=subject, content=content)
+        db.add(msg)
+        db.flush()
+        
+        for rid in recipient_uuids:
+            recipient = db.query(User).filter(User.id == rid).first()
+            if not recipient:
+                raise ValueError(f"Recipient {rid} not found")
+            
+            mr = MessageRecipient(message_id=msg.id, recipient_id=rid, read=False)
+            db.add(mr)
+        
+        db.commit()
+        db.refresh(msg)
+        return serialize_message(msg)
+    finally:
+        db.close()
+
+@mcp.tool()
+def get_sent_messages(user_id: str):
+    """ Get sent messages"""
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise ValueError("Invalid user ID format")
+    
+    db = get_db_session()
+    try:
+        user = db.query(User).filter(User.id == user_uuid).first()
+        if not user:
+            raise ValueError("User not found")
+        
+        messages = db.query(Message).filter(Message.sender_id == user_uuid).all()
+        return [serialize_message(msg) for msg in messages]
+    finally:
+        db.close()
+
+@mcp.tool()
+def get_inbox(user_id: str):
+    """ View inbox messages"""
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise ValueError("Invalid user ID format")
+    
+    db = get_db_session()
+    try:
+        messages = (
+            db.query(Message)
+            .join(MessageRecipient)
+            .filter(MessageRecipient.recipient_id == user_uuid)
+            .all()
         )
-    # Check sender exists
-    sender = db.query(models.User).filter(models.User.id == sender_id).first()
-    if not sender:
-        raise HTTPException(status_code=404, detail="Sender not found")
+        return [serialize_message(msg) for msg in messages]
+    finally:
+        db.close()
 
-    msg = models.Message(sender_id=sender_id, subject=subject, content=content)
-    db.add(msg)
-    db.commit()
-    db.refresh(msg)
-
-    for rid in recipient_ids:
-        recipient = db.query(models.User).filter(models.User.id == rid).first()
-        if not recipient:
-            raise HTTPException(status_code=404, detail=f"Recipient {rid} not found")
-        mr = models.MessageRecipient(message_id=msg.id, recipient_id=rid, read=False)
-        db.add(mr)
-    db.commit()
-
-    return MCPResponse(
-        output=f"Message sent with ID {msg.id}",
-        data={"message_id": str(msg.id)},
-        context=req.context,
-    )
-
-# MCP: Inbox messages
-@app.post("/mcp/inbox", response_model=MCPResponse)
-def inbox_tool(req: MCPRequest, db: Session = Depends(get_db)):
-    params = req.params or {}
-    user_id = params.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Missing 'user_id'")
-    messages = (
-        db.query(models.Message)
-        .join(models.MessageRecipient)
-        .filter(models.MessageRecipient.recipient_id == user_id)
-        .all()
-    )
-    messages_data = []
-    for m in messages:
-        messages_data.append(
-            {
-                "id": str(m.id),
-                "sender_id": str(m.sender_id),
-                "subject": m.subject,
-                "content": m.content,
-                "timestamp": m.timestamp.isoformat(),
-            }
+@mcp.tool()
+def get_unread_messages(user_id: str):
+    """ View unread messages"""
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise ValueError("Invalid user ID format")
+    
+    db = get_db_session()
+    try:
+        messages = (
+            db.query(Message)
+            .join(MessageRecipient)
+            .filter(
+                MessageRecipient.recipient_id == user_uuid,
+                MessageRecipient.read == False
+            )
+            .all()
         )
-    return MCPResponse(
-        output=f"Found {len(messages_data)} messages in inbox.",
-        data={"messages": messages_data},
-        context=req.context,
-    )
+        return [serialize_message(msg) for msg in messages]
+    finally:
+        db.close()
 
-# MCP: Mark message as read
-@app.post("/mcp/mark_read", response_model=MCPResponse)
-def mark_read_tool(req: MCPRequest, db: Session = Depends(get_db)):
-    params = req.params or {}
-    message_id = params.get("message_id")
-    recipient_id = params.get("recipient_id")
-    if not message_id or not recipient_id:
-        raise HTTPException(
-            status_code=400, detail="Missing 'message_id' or 'recipient_id'"
+@mcp.tool()
+def get_message_with_recipients(message_id: str):
+    """ View recipients message """
+    try:
+        message_uuid = UUID(message_id)
+    except ValueError:
+        raise ValueError("Invalid message ID format")
+    
+    db = get_db_session()
+    try:
+        msg = (
+            db.query(Message)
+            .options(joinedload(Message.recipients))
+            .filter(Message.id == message_uuid)
+            .first()
         )
-    mr = (
-        db.query(models.MessageRecipient)
-        .filter(
-            models.MessageRecipient.message_id == message_id,
-            models.MessageRecipient.recipient_id == recipient_id,
+        if not msg:
+            raise ValueError("Message not found")
+        
+        return serialize_message_with_recipients(msg)
+    finally:
+        db.close()
+
+@mcp.tool()
+def mark_message_as_read(message_id: str, recipient_id: str) -> Dict[str, str]:
+    """ Mark a message as read"""
+    try:
+        message_uuid = UUID(message_id)
+        recipient_uuid = UUID(recipient_id)
+    except ValueError:
+        raise ValueError("Invalid UUID format")
+    
+    db = get_db_session()
+    try:
+        mr = (
+            db.query(MessageRecipient)
+            .filter(
+                MessageRecipient.message_id == message_uuid,
+                MessageRecipient.recipient_id == recipient_uuid,
+            )
+            .first()
         )
-        .first()
-    )
-    if not mr:
-        raise HTTPException(status_code=404, detail="Recipient not found for this message")
-    mr.read = True
-    mr.read_at = datetime.utcnow()
-    db.commit()
-    return MCPResponse(output="Marked as read", context=req.context)
+        if not mr:
+            raise ValueError("Recipient not found for this message")
+        
+        mr.read = True
+        mr.read_at = datetime.utcnow()
+        db.commit()
+        
+        return {"status": "marked as read"}
+    finally:
+        db.close()
+
+#### RESOURCE HANDLERS ####
+
+@mcp.resource("messaging://users")
+def get_all_users_resource() -> str:
+    """Resource handler for all users"""
+    users = list_users()
+    return json.dumps(users, indent=2)
+
+@mcp.resource("messaging://users/{user_id}")
+def get_user_resource(user_id: str) -> str:
+    """Resource handler for specific user"""
+    user = get_user(user_id)
+    return json.dumps(user, indent=2)
+
+@mcp.resource("messaging://messages/inbox/{user_id}")
+def get_inbox_resource(user_id: str) -> str:
+    """Resource handler for user's inbox"""
+    messages = get_inbox(user_id)
+    return json.dumps(messages, indent=2)
+
+@mcp.resource("messaging://messages/sent/{user_id}")
+def get_sent_messages_resource(user_id: str) -> str:
+    """Resource handler for user's sent messages"""
+    messages = get_sent_messages(user_id)
+    return json.dumps(messages, indent=2)
+
+@mcp.resource("messaging://messages/unread/{user_id}")
+def get_unread_messages_resource(user_id: str) -> str:
+    """Resource handler for user's unread messages"""
+    messages = get_unread_messages(user_id)
+    return json.dumps(messages, indent=2)
+
+@mcp.resource("messaging://messages/{message_id}")
+def get_message_resource(message_id: str) -> str:
+    """Resource handler for specific message with recipients"""
+    message = get_message_with_recipients(message_id)
+    return json.dumps(message, indent=2)
+
+if __name__ == "__main__":
+    # Run the MCP server
+    mcp.run()
