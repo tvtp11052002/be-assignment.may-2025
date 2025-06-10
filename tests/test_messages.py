@@ -41,6 +41,7 @@ def test_data():
         "message": message,
     }
 
+
 # Send message
 def test_send_message(test_data):
     message = test_data["message"]
@@ -73,12 +74,13 @@ def test_get_unread_messages(test_data):
     assert isinstance(unread.json(), list)
 
 
-# Get message with recipients (optional) 
+# Get message with recipients (optional)
 def test_get_message_with_recipients(test_data):
     msg_id = test_data["message"]["id"]
     response = client.get(f"/messages/{msg_id}")
     assert response.status_code == 200
     assert "recipients" in response.json()
+
 
 # Mark message as read
 def test_mark_as_read(test_data):

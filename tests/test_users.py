@@ -20,11 +20,13 @@ def test_user():
     assert response.status_code == 201
     return response.json()
 
+
 #### User Management ####
 # Create usser
 def test_create_user(test_user):
     assert "id" in test_user
     assert test_user["email"] == "test@example.com"
+
 
 # Get usser by ID
 def test_get_user_by_id():
@@ -38,6 +40,7 @@ def test_get_user_by_id():
     assert response.status_code == 200
     assert response.json()["email"] == "get@example.com"
 
+
 # Lisst ussers
 def test_list_users():
     client.post("/users/", json={"email": "list@example.com", "name": "List User"})
@@ -46,6 +49,7 @@ def test_list_users():
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) > 0
+
 
 # Optional: Delete all users
 def test_delete_all_users():

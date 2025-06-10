@@ -41,8 +41,12 @@ class MessageRecipient(Base):
     __tablename__ = "message_recipients"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"))
-    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    message_id = Column(
+        UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE")
+    )
+    recipient_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+    )
 
     read = Column(Boolean, default=False)
     read_at = Column(DateTime, nullable=True)

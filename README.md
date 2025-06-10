@@ -156,4 +156,4 @@ You must include the following in your project:
 		3. Manager send message "Task Assignment" to employee
 		4. Show unread messages of employee
 		5. Mark this unread message as read
-		6. Show all unread messages to confirm
+		6. Show all unread messages to confirm 

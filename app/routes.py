@@ -31,6 +31,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
+
 # List users
 @router.get("/users/", response_model=list[schemas.UserResponse])
 def list_users(db: Session = Depends(get_db)):
@@ -81,6 +82,7 @@ def send_message(data: schemas.MessageCreate, db: Session = Depends(get_db)):
     db.refresh(msg)
     return msg
 
+
 # View sent messages
 @router.get("/messages/sent", response_model=List[schemas.MessageResponse])
 def get_sent_messages(user_id: UUID, db: Session = Depends(get_db)):
@@ -89,6 +91,7 @@ def get_sent_messages(user_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     messages = db.query(Message).filter(Message.sender_id == user_id).all()
     return messages
+
 
 # View inbox messages
 @router.get("/messages/inbox", response_model=List[schemas.MessageResponse])
@@ -100,6 +103,7 @@ def get_inbox(user_id: UUID, db: Session = Depends(get_db)):
         .all()
     )
     return messages
+
 
 # View unread messages
 @router.get("/messages/unread", response_model=List[schemas.MessageResponse])
@@ -113,6 +117,7 @@ def get_unread_messages(user_id: UUID, db: Session = Depends(get_db)):
         .all()
     )
     return messages
+
 
 # View a message with all recipients
 @router.get("/messages/{message_id}", response_model=schemas.MessageDetailResponse)
