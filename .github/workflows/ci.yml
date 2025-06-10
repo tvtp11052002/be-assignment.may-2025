@@ -14,9 +14,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: tuan_phong
-          POSTGRES_PASSWORD: Phong2525132546879!
-          POSTGRES_DB: be_assign
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports: [ "5432:5432" ]
         options: >-
           --health-cmd pg_isready
@@ -38,7 +38,7 @@ jobs:
         sudo apt install -y just
 
     - name: Set environment variables
-      run: echo "DATABASE_URL=postgresql+psycopg2://tuan_phong:Phong2525132546879!@localhost:5432/be_assign" >> $GITHUB_ENV
+      run: echo "DATABASE_URL=postgresql+psycopg2://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}" >> $GITHUB_ENV
 
     - name: Install dependencies
       run: just install
